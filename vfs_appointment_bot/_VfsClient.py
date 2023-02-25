@@ -8,10 +8,10 @@ from _ConfigReader import _ConfigReader
 from _TwilioClient import _TwilioClient
 from _TelegramClient import _TelegramClient
 
-
 from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 from selenium.common.exceptions import NoSuchElementException
+
 
 class _VfsClient:
 
@@ -48,8 +48,8 @@ class _VfsClient:
     def _login(self):
 
         _section_header = "VFS"
-        _email = self._config_reader.read_prop(_section_header, "vfs_email");
-        _password = self._config_reader.read_prop(_section_header, "vfs_password");
+        _email = self._config_reader.read_prop(_section_header, "vfs_email")
+        _password = self._config_reader.read_prop(_section_header, "vfs_password")
 
         logging.debug("Logging in with email: {}".format(_email))
 
@@ -78,7 +78,9 @@ class _VfsClient:
             raise Exception("Unable to login. VFS website is not responding")
 
     def _get_appointment_date(self, visa_centre, category, sub_category):
-        logging.info("Getting appointment date: Visa Centre: {}, Category: {}, Sub-Category: {}".format(visa_centre, category, sub_category))
+        logging.info(
+            "Getting appointment date: Visa Centre: {}, Category: {}, Sub-Category: {}".format(visa_centre, category,
+                                                                                               sub_category))
         # select from drop down
         _new_booking_button = self._web_driver.find_element_by_xpath(
             "//section/div/div[2]/button/span"

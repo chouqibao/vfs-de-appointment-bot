@@ -2,6 +2,7 @@ import logging
 import requests
 from _ConfigReader import _ConfigReader
 
+
 class _TelegramClient:
 
     def __init__(self):
@@ -9,7 +10,7 @@ class _TelegramClient:
         _section_header = "TELEGRAM"
         self.chat_id = _config_reader.read_prop(_section_header, "chat_id")
         self.parse_mode = _config_reader.read_prop(_section_header, "parse_mode")
-        self.bot_token = _config_reader.read_prop(_section_header,"bot_token")
+        self.bot_token = _config_reader.read_prop(_section_header, "bot_token")
 
     def send_message(self, message):
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage?chat_id={self.chat_id}&parse_mode={self.parse_mode}&text={message}"

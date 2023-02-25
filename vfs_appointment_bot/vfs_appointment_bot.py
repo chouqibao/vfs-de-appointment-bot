@@ -6,6 +6,7 @@ from _Timer import countdown
 from _ConfigReader import _ConfigReader
 from _VfsClient import _VfsClient
 
+
 def _input():
     print("Enter the visa centre: ")
     visa_centre = input()
@@ -20,6 +21,7 @@ def _input():
 
     return visa_centre, category, sub_category
 
+
 def _read_command_line_args():
     if len(sys.argv) != 4:
         return _input()
@@ -29,7 +31,7 @@ def _read_command_line_args():
 if __name__ == "__main__":
     count = 1
     fileConfig('config/logging.ini')
-    logging = logging.getLogger(__name__);
+    logging = logging.getLogger(__name__)
 
     _vfs_client = _VfsClient()
     _config_reader = _ConfigReader()
