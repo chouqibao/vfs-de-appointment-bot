@@ -1,10 +1,12 @@
 import time
 import logging
 import datetime
+import re
 
 from _ConfigReader import _ConfigReader
-from _TwilioClient import _TwilioClient
 from _TelegramClient import _TelegramClient
+from _TwilioClient import _TwilioClient
+from _SystemNotificationClient import _SystemNotificationClient
 
 from selenium import webdriver
 from selenium.common.exceptions import NoSuchElementException
@@ -15,14 +17,19 @@ from selenium.webdriver.common.by import By
 class _VfsClient:
 
     def __init__(self):
-        self._twilio_client = _TwilioClient()
         self._telegram_client = _TelegramClient()
+        self._twilio_client = _TwilioClient()
+        self._system_notification_client = _SystemNotificationClient()
         self._config_reader = _ConfigReader()
 
         self._use_telegram = self._config_reader.read_prop('DEFAULT', 'use_telegram')
         self._use_twilio = self._config_reader.read_prop('DEFAULT', 'use_twilio')
+        self._use_system_notification = self._config_reader.read_prop('DEFAULT', 'use_system_notification')
         logging.debug('Will use Telegram : {}'.format(self._use_telegram))
         logging.debug('Will use Twilio : {}'.format(self._use_twilio))
+        logging.debug('Will use system notification : {}'.format(self._use_system_notification))
+
+        self.date_limit = self._config_reader.read_prop("VFS", "only_if_earlier")
 
     def _init_web_driver(self):
         chrome_options = Options()
@@ -106,6 +113,20 @@ class _VfsClient:
         # read contents of the text box
         return self._web_driver.find_element(By.XPATH, '//div[4]/div')
 
+    def _check_if_earlier(self, message, date):
+        print(message)
+        matches = re.match(r'Earliest Available Slot : (\d{2}-\d{2}-\d{4})', message)
+        return datetime.datetime.strptime(matches.group(1), "%d-%m-%Y") <= datetime.datetime.strptime(date, "%Y-%m-%d")
+
+    def _send_message(self, message):
+        if eval(self._use_telegram):
+            self._telegram_client.send_message(message)
+        if eval(self._use_twilio):
+            self._twilio_client.send_message(message)
+            self._twilio_client.call()
+        if eval(self._use_system_notification):
+            self._system_notification_client.show_notification('VFS Bot', message)
+
     def check_slot(self, visa_centre, category, sub_category):
         self._init_web_driver()
 
@@ -120,15 +141,14 @@ class _VfsClient:
         logging.debug('Message: ' + _message.text)
 
         if _message.text and 'No appointment slots are currently available' not in _message.text:
-            logging.info('Appointment slots available: {}'.format(_message.text))
-            ts = time.time()
-            st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
-            message = '{} at {}'.format(_message.text, st)
-            if eval(self._use_telegram):
-                self._telegram_client.send_message(message)
-            if eval(self._use_twilio):
-                self._twilio_client.send_message(message)
-                self._twilio_client.call()
+            if not self.date_limit or self._check_if_earlier(_message.text, self.date_limit):
+                logging.info('Appointment slots available: {}'.format(_message.text))
+                ts = time.time()
+                st = datetime.datetime.fromtimestamp(ts).strftime('%Y-%m-%d %H:%M:%S')
+                message = '{} at {}'.format(_message.text, st)
+                self._send_message(message)
+            else:
+                logging.info("No slots available before {}".format(self.date_limit))
         else:
             logging.info('No appointment slots are currently available')
         # Close the browser

@@ -38,10 +38,14 @@ def main():
     _interval = _config_reader.read_prop('DEFAULT', 'interval')
     logger.debug('Interval: {}'.format(_interval))
 
+    _vfs_client._send_message('Restarted!')
+
     visa_centre, category, sub_category = _read_command_line_args()
 
     logger.info('Starting VFS Appointment Bot')
     while True:
+        if count % 10 == 0:
+            _vfs_client._send_message('Still running! Attempt No.{}'.format(count))
         try:
             logger.info('Running VFS Appointment Bot: Attempt#{}'.format(count))
             _vfs_client.check_slot(visa_centre=visa_centre, category=category, sub_category=sub_category)
